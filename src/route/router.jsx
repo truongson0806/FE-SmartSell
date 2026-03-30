@@ -1,8 +1,9 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import { publicRoutes } from './route'
+import { publicRoutes, storeOwnerRoutes } from './route'
 
 const routes = [
     ...publicRoutes,
+    ...storeOwnerRoutes
   
 ]
 
