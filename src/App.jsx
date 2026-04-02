@@ -9,6 +9,8 @@ function App() {
         <>
             <LoadingProvider>
                 <Router />
+                
+                <ChatBox />
             </LoadingProvider>
             <ToastContainer />
         </>
