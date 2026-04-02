@@ -1,0 +1,28 @@
+/* Reset CSS */
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body{
+  background:#f5f5f5;
+}
+
+/* Link */
+a{
+  text-decoration:none;
+  color:inherit;
+}
+
+/* Container chung */
+.container{
+  width:1200px;
+  margin:auto;
+}
+
+/* Title */
+h1{
+  margin:20px 0;
+}
