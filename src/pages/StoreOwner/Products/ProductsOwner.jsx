@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import toast from "react-hot-toast";
 import axiosInstance from "../../../network/httpRequest";
 import {
   Add,
@@ -23,6 +24,8 @@ export default function ProductsOwnerPage() {
   const [showDetail, setShowDetail] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [menuOpenId, setMenuOpenId] = useState(null);
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [deleteProductId, setDeleteProductId] = useState(null);
   const menuRef = useRef(null);
   // Load sản phẩm
   const fetchProducts = async () => {
@@ -70,36 +73,54 @@ export default function ProductsOwnerPage() {
   const filteredProducts = products.filter((p) =>
     p.name?.toLowerCase().includes(search.toLowerCase())
   );
-  const handleDeleteProduct = async (id) => {
-    if (!window.confirm("Bạn có chắc muốn xóa sản phẩm?")) return;
+  const openDeletePopup = (id) => {
+    setDeleteProductId(id);
+    setShowDeletePopup(true);
+  };
+  
 
+  const handleDeleteProduct = async () => {
     try {
-      await axiosInstance.delete(`/products/deleteProductById/${id}`);
+      await axiosInstance.delete(
+        `/products/deleteProductById/${deleteProductId}`
+      );
+  
+      toast.success("Xóa sản phẩm thành công");
+  
       fetchProducts();
+      setShowDeletePopup(false);
     } catch (error) {
       console.log(error);
-      alert("Lỗi xóa sản phẩm");
+      toast.error("Xóa sản phẩm thất bại");
     }
   };
-  const handleEditProduct = (product) => {
-    setSelectedProduct(product);
-    setShowModal(true); // sau này modal dùng cho edit luôn
+  const handleEditProduct = async (product) => {
+    try {
+      const res = await axiosInstance.get(
+        `/products/getProductById/${product._id}`
+      );
+
+      setSelectedProduct(res.data.data);
+      setShowModal(true);
+    } catch (error) {
+      console.log(error);
+    }
   };
   return (
     <div className="space-y-6">
       {/* Thống kê */}
       <div className="grid grid-cols-3 gap-6">
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-2xl shadow">
+        <div className="bg-linear-to-r from-blue-500 to-blue-600 text-white p-6 rounded-2xl shadow">
           <p className="text-sm">Tổng sản phẩm</p>
           <p className="text-3xl font-bold">{totalProducts}</p>
         </div>
 
-        <div className="bg-gradient-to-r from-orange-400 to-orange-500 text-white p-6 rounded-2xl shadow">
+        <div className="bg-linear-to-r from-orange-400 to-orange-500 text-white p-6 rounded-2xl shadow">
           <p className="text-sm">Sắp hết hàng</p>
           <p className="text-3xl font-bold">{lowStock}</p>
         </div>
 
-        <div className="bg-gradient-to-r from-red-500 to-red-600 text-white p-6 rounded-2xl shadow">
+        <div className="bg-linear-to-r from-red-500 to-red-600 text-white p-6 rounded-2xl shadow">
           <p className="text-sm">Hết hàng</p>
           <p className="text-3xl font-bold">{outOfStock}</p>
         </div>
@@ -154,23 +175,50 @@ export default function ProductsOwnerPage() {
             return (
               <div
                 key={p._id}
-                onClick={() => {
-                  setSelectedProduct(p);
-                  setShowDetail(true);
-                }}
-                className="bg-white rounded-2xl shadow hover:shadow-xl transition overflow-hidden cursor-pointer"
+                className="bg-white rounded-2xl shadow hover:shadow-xl transition overflow-hidden"
               >
+                {/* Image */}
                 <img src={p.images?.[0]} className="w-full h-44 object-cover" />
 
-                <div className="p-4">
-                  <p className="font-semibold text-lg">{p.name}</p>
-                  <p className="text-gray-500 text-sm">{p.brand}</p>
+                {/* Info */}
+                <div className="p-4 space-y-1">
+                  <p className="font-semibold text-lg line-clamp-1">{p.name}</p>
 
-                  <div className="flex justify-between mt-3">
+                  <p className="text-sm text-gray-500">
+                    {p.brand} • {p.productModel}
+                  </p>
+
+                  <p className="text-sm text-gray-500">
+                    Danh mục: {p.categories?.name || "Không có"}
+                  </p>
+
+                  <div className="flex justify-between mt-2">
                     <span className="font-bold text-blue-600">
                       {p.price?.toLocaleString()}đ
                     </span>
-                    <span className="text-sm">Tồn: {totalStock}</span>
+                    <span className="text-sm text-gray-500">
+                      Tồn: {totalStock}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-gray-400">
+                    {new Date(p.createdAt).toLocaleDateString()}
+                  </p>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      onClick={() => handleEditProduct(p)}
+                      className="flex-1 bg-blue-500 text-white py-1 rounded-lg text-sm cursor-pointer"
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      onClick={() => openDeletePopup(p._id)}
+                      className="flex-1 bg-red-500 text-white py-1 rounded-lg text-sm cursor-pointer"
+                    >
+                      Xóa
+                    </button>
                   </div>
                 </div>
               </div>
@@ -181,11 +229,11 @@ export default function ProductsOwnerPage() {
 
       {/* TABLE */}
       {view === "table" && (
-        <div className="bg-white rounded-2xl shadow overflow-hidden">
+        <div className="bg-white rounded-2xl shadow overflow-visible">
           <table className="w-full text-sm">
             <thead className="bg-gray-50">
               <tr className="text-left text-gray-500">
-                <th className="p-4">Sản phẩm</th>
+                <th className="p-3">Sản phẩm</th>
                 <th>Hãng</th>
                 <th>Model</th>
                 <th>Giá</th>
@@ -210,7 +258,7 @@ export default function ProductsOwnerPage() {
                       setSelectedProduct(p);
                       setShowDetail(true);
                     }}
-                    className="border-t hover:bg-gray-50 cursor-pointer"
+                    className="border-t hover:bg-gray-50 cursor-pointer "
                   >
                     <td className="p-4 flex items-center gap-3">
                       <img
@@ -226,7 +274,7 @@ export default function ProductsOwnerPage() {
                     <td>{p.brand}</td>
                     <td>{p.productModel}</td>
                     <td className="font-semibold text-blue-600">
-                      {p.price?.toLocaleString()}đ
+                      {p.price?.toLocaleString()} đ
                     </td>
                     <td>{totalStock}</td>
                     <td>{p.releaseYear}</td>
@@ -258,7 +306,7 @@ export default function ProductsOwnerPage() {
 
                           <button
                             className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100 cursor-pointer"
-                            onClick={() => handleDeleteProduct(p._id)}
+                            onClick={() => openDeletePopup(p._id)}
                           >
                             Xóa
                           </button>
@@ -378,12 +426,42 @@ export default function ProductsOwnerPage() {
           </div>
         </div>
       )}
+      {showDeletePopup && (
+        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
+          <div className="bg-white w-80 p-6 rounded-xl shadow-lg">
+            <h3 className="text-lg font-semibold mb-2 text-red-600">
+              Xóa sản phẩm
+            </h3>
+            <p className="text-gray-500 mb-4">
+              Bạn có chắc muốn xóa sản phẩm này?
+            </p>
 
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowDeletePopup(false)}
+                className="px-4 py-2 border rounded"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleDeleteProduct}
+                className="px-4 py-2 bg-red-600 text-white rounded"
+              >
+                Xóa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Modal thêm sản phẩm */}
       <AddProductModal
         open={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+          setSelectedProduct(null);
+        }}
         onSuccess={fetchProducts}
+        product={selectedProduct}
       />
       {/* Modal thêm danh mục */}
       <CategoryModal
