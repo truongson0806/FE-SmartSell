@@ -47,4 +47,4 @@ export default function AddCustomer({ onSuccess }) {
       <button onClick={handleSubmit}>Thêm</button>
     </div>
   );
-}
+} 
