@@ -1,82 +1,439 @@
-
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Message from "./Message";
 import ProductCard from "./ProductCard";
 import QuickReply from "./QuickReply";
 
 const ChatBox = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { type: "ai", text: "Xin chào! Tôi là SmartSell AI 🤖. Bạn cần tư vấn gì?" }
+    {
+      type: "ai",
+      text: "Xin chào! Tôi là SmartSell AI 🤖\nTôi có thể giúp bạn tư vấn điện thoại, so sánh sản phẩm và tìm deal tốt nhất!",
+    },
   ]);
+  const [inputValue, setInputValue] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
 
   const handleSend = (text) => {
+    if (!text.trim()) return;
     const newMessages = [...messages, { type: "user", text }];
+    setMessages(newMessages);
+    setInputValue("");
+    setIsTyping(true);
 
-    let aiResponse = {
-      type: "ai",
-      text: "Bạn muốn tìm điện thoại theo mức giá nào?"
-    };
-
-    if (text.toLowerCase().includes("10")) {
-      aiResponse = {
+    setTimeout(() => {
+      let aiResponse = {
         type: "ai",
-        text: "Đây là một số sản phẩm phù hợp:",
-        products: [
-          {
-            name: "iPhone 11",
-            price: "9.990.000đ",
-            image: "https://via.placeholder.com/100"
-          },
-          {
-            name: "Samsung S21",
-            price: "8.990.000đ",
-            image: "https://via.placeholder.com/100"
-          }
-        ]
+        text: "Bạn muốn tìm điện thoại theo mức giá nào? Tôi có thể gợi ý cho bạn những lựa chọn tốt nhất! 😊",
       };
-    }
 
-    setMessages([...newMessages, aiResponse]);
+      const lower = text.toLowerCase();
+
+      if (lower.includes("10") || lower.includes("dưới 10") || lower.includes("giá rẻ")) {
+        aiResponse = {
+          type: "ai",
+          text: "Dưới 10 triệu có khá nhiều lựa chọn tốt! Đây là một số sản phẩm phù hợp:",
+          products: [
+            {
+              name: "iPhone 11 64GB",
+              price: "9.990.000đ",
+              oldPrice: "12.990.000đ",
+              image: "https://via.placeholder.com/100/e2e8f0/64748b?text=📱",
+              badge: "-23%",
+            },
+            {
+              name: "Samsung Galaxy A55",
+              price: "8.490.000đ",
+              oldPrice: "10.990.000đ",
+              image: "https://via.placeholder.com/100/e2e8f0/64748b?text=📱",
+              badge: "-22%",
+            },
+          ],
+        };
+      } else if (lower.includes("game") || lower.includes("chơi game")) {
+        aiResponse = {
+          type: "ai",
+          text: "Máy chơi game cần RAM lớn, màn hình 120Hz và pin khủng! Xem ngay các máy hot:",
+          products: [
+            {
+              name: "Xiaomi 14T Pro Gaming",
+              price: "14.990.000đ",
+              oldPrice: "16.990.000đ",
+              image: "https://via.placeholder.com/100/e2e8f0/64748b?text=🎮",
+              badge: "-12%",
+            },
+            {
+              name: "ASUS ROG Phone 8",
+              price: "22.990.000đ",
+              oldPrice: "26.000.000đ",
+              image: "https://via.placeholder.com/100/e2e8f0/64748b?text=🎮",
+              badge: "-11%",
+            },
+          ],
+        };
+      } else if (lower.includes("ảnh") || lower.includes("camera") || lower.includes("chụp")) {
+        aiResponse = {
+          type: "ai",
+          text: "Đam mê nhiếp ảnh? Đây là những chiếc điện thoại có camera xuất sắc nhất hiện nay:",
+          products: [
+            {
+              name: "iPhone 16 Pro Max",
+              price: "27.490.000đ",
+              oldPrice: "30.990.000đ",
+              image: "https://via.placeholder.com/100/e2e8f0/64748b?text=📸",
+              badge: "-11%",
+            },
+            {
+              name: "Samsung S25 Ultra",
+              price: "26.990.000đ",
+              oldPrice: "29.990.000đ",
+              image: "https://via.placeholder.com/100/e2e8f0/64748b?text=📸",
+              badge: "-10%",
+            },
+          ],
+        };
+      } else if (lower.includes("tư vấn") || lower.includes("điện thoại")) {
+        aiResponse = {
+          type: "ai",
+          text: "Tôi sẵn sàng tư vấn cho bạn! Bạn đang quan tâm đến điện thoại theo tiêu chí nào?\n\n💰 Mức giá\n📸 Camera đẹp\n🎮 Chơi game\n🔋 Pin trâu",
+        };
+      }
+
+      setIsTyping(false);
+      setMessages((prev) => [...prev, aiResponse]);
+    }, 1200);
   };
 
   return (
-    <div className="fixed bottom-5 right-5 w-[350px] h-[500px] bg-white border rounded-xl flex flex-col shadow-xl z-50">
-      
-      {/* Header */}
-      <div className="p-3 bg-blue-500 text-white font-bold rounded-t-xl">
-        🤖 SmartSell AI
-      </div>
+    <>
+      {/* Floating Toggle Button */}
+      <button
+        id="ai-chat-toggle-btn"
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          position: "fixed",
+          bottom: "24px",
+          right: "24px",
+          width: "60px",
+          height: "60px",
+          borderRadius: "50%",
+          background: "linear-gradient(135deg, #059669, #10b981)",
+          border: "none",
+          cursor: "pointer",
+          boxShadow: "0 8px 32px rgba(5, 150, 105, 0.4)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "26px",
+          zIndex: 1000,
+          transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+          transform: isOpen ? "scale(0.9) rotate(20deg)" : "scale(1)",
+        }}
+        title="Mở trợ lý AI"
+      >
+        {isOpen ? "✕" : "🤖"}
+      </button>
 
-      {/* Chat content */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-2">
-        {messages.map((msg, index) => (
-          <div key={index}>
-            <Message msg={msg} />
-            {msg.products &&
-              msg.products.map((p, i) => (
-                <ProductCard key={i} product={p} />
-              ))}
-          </div>
-        ))}
-      </div>
-
-      {/* Quick reply */}
-      <QuickReply onSend={handleSend} />
-
-      {/* Input */}
-      <div className="flex border-t">
-        <input
-          className="flex-1 p-2 outline-none"
-          placeholder="Nhập tin nhắn..."
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && e.target.value.trim() !== "") {
-              handleSend(e.target.value);
-              e.target.value = "";
-            }
+      {/* Pulse ring animation */}
+      {!isOpen && (
+        <span
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            width: "60px",
+            height: "60px",
+            borderRadius: "50%",
+            background: "rgba(16, 185, 129, 0.3)",
+            zIndex: 999,
+            animation: "ping 2s cubic-bezier(0, 0, 0.2, 1) infinite",
           }}
         />
-      </div>
-    </div>
+      )}
+
+      {/* Chat Window */}
+      {isOpen && (
+        <div
+          id="ai-chatbox-window"
+          style={{
+            position: "fixed",
+            bottom: "100px",
+            right: "24px",
+            width: "370px",
+            height: "560px",
+            background: "#ffffff",
+            borderRadius: "24px",
+            boxShadow: "0 24px 64px rgba(0,0,0,0.18), 0 4px 16px rgba(5,150,105,0.12)",
+            display: "flex",
+            flexDirection: "column",
+            zIndex: 999,
+            overflow: "hidden",
+            animation: "slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1)",
+            border: "1px solid rgba(5,150,105,0.15)",
+          }}
+        >
+          {/* Header */}
+          <div
+            style={{
+              background: "linear-gradient(135deg, #065f46, #059669)",
+              padding: "16px 20px",
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              flexShrink: 0,
+            }}
+          >
+            <div
+              style={{
+                width: "44px",
+                height: "44px",
+                borderRadius: "50%",
+                background: "rgba(255,255,255,0.2)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "22px",
+                border: "2px solid rgba(255,255,255,0.3)",
+              }}
+            >
+              🤖
+            </div>
+            <div style={{ flex: 1 }}>
+              <div
+                style={{
+                  color: "#ffffff",
+                  fontWeight: 800,
+                  fontSize: "15px",
+                  fontFamily: "Arial, sans-serif",
+                  letterSpacing: "-0.3px",
+                }}
+              >
+                SmartSell AI
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  marginTop: "2px",
+                }}
+              >
+                <span
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    borderRadius: "50%",
+                    background: "#86efac",
+                    display: "inline-block",
+                    animation: "pulse 2s infinite",
+                  }}
+                />
+                <span style={{ color: "#a7f3d0", fontSize: "12px" }}>
+                  Đang hoạt động
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              style={{
+                background: "rgba(255,255,255,0.15)",
+                border: "none",
+                color: "white",
+                width: "32px",
+                height: "32px",
+                borderRadius: "50%",
+                cursor: "pointer",
+                fontSize: "16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "background 0.2s",
+              }}
+              onMouseOver={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
+              onMouseOut={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Messages Area */}
+          <div
+            style={{
+              flex: 1,
+              overflowY: "auto",
+              padding: "16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+              background: "#f8fafc",
+              scrollbarWidth: "thin",
+              scrollbarColor: "#d1fae5 transparent",
+            }}
+          >
+            {messages.map((msg, index) => (
+              <div key={index}>
+                <Message msg={msg} />
+                {msg.products &&
+                  msg.products.map((p, i) => <ProductCard key={i} product={p} />)}
+              </div>
+            ))}
+
+            {/* Typing Indicator */}
+            {isTyping && (
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <div
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, #059669, #10b981)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "14px",
+                    flexShrink: 0,
+                  }}
+                >
+                  🤖
+                </div>
+                <div
+                  style={{
+                    background: "#ffffff",
+                    borderRadius: "18px 18px 18px 4px",
+                    padding: "12px 16px",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+                    display: "flex",
+                    gap: "5px",
+                    alignItems: "center",
+                  }}
+                >
+                  {[0, 1, 2].map((i) => (
+                    <span
+                      key={i}
+                      style={{
+                        width: "7px",
+                        height: "7px",
+                        borderRadius: "50%",
+                        background: "#059669",
+                        display: "inline-block",
+                        animation: `bounce 1.2s ease infinite`,
+                        animationDelay: `${i * 0.2}s`,
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Reply Area */}
+          <QuickReply onSend={handleSend} />
+
+          {/* Input Area */}
+          <div
+            style={{
+              padding: "12px 16px",
+              background: "#ffffff",
+              borderTop: "1px solid #e2e8f0",
+              display: "flex",
+              gap: "10px",
+              alignItems: "center",
+              flexShrink: 0,
+            }}
+          >
+            <input
+              id="ai-chat-input"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && inputValue.trim()) {
+                  handleSend(inputValue.trim());
+                }
+              }}
+              placeholder="Nhập tin nhắn..."
+              style={{
+                flex: 1,
+                padding: "10px 16px",
+                borderRadius: "24px",
+                border: "1.5px solid #d1fae5",
+                outline: "none",
+                fontSize: "14px",
+                fontFamily: "Arial, sans-serif",
+                background: "#f0fdf4",
+                color: "#1e293b",
+                transition: "border-color 0.2s, box-shadow 0.2s",
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = "#059669";
+                e.target.style.boxShadow = "0 0 0 3px rgba(5,150,105,0.1)";
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = "#d1fae5";
+                e.target.style.boxShadow = "none";
+              }}
+            />
+            <button
+              id="ai-chat-send-btn"
+              onClick={() => handleSend(inputValue.trim())}
+              disabled={!inputValue.trim()}
+              style={{
+                width: "42px",
+                height: "42px",
+                borderRadius: "50%",
+                background: inputValue.trim()
+                  ? "linear-gradient(135deg, #059669, #10b981)"
+                  : "#e2e8f0",
+                border: "none",
+                cursor: inputValue.trim() ? "pointer" : "not-allowed",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "18px",
+                flexShrink: 0,
+                transition: "all 0.2s",
+                boxShadow: inputValue.trim()
+                  ? "0 4px 12px rgba(5,150,105,0.3)"
+                  : "none",
+              }}
+            >
+              ➤
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* CSS Animations */}
+      <style>{`
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(30px) scale(0.95); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes ping {
+          75%, 100% { transform: scale(2); opacity: 0; }
+        }
+        @keyframes bounce {
+          0%, 60%, 100% { transform: translateY(0); }
+          30%            { transform: translateY(-6px); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.5; }
+        }
+        #ai-chatbox-window ::-webkit-scrollbar { width: 4px; }
+        #ai-chatbox-window ::-webkit-scrollbar-track { background: transparent; }
+        #ai-chatbox-window ::-webkit-scrollbar-thumb { background: #a7f3d0; border-radius: 4px; }
+      `}</style>
+    </>
   );
 };
 
