@@ -3,119 +3,41 @@ import Message from "./Message";
 import ProductCard from "./ProductCard";
 import QuickReply from "./QuickReply";
 
+// ─────────────────────────────────────────────
+//  TODO: Truyền dữ liệu tin nhắn thật từ database / API vào đây
+// ─────────────────────────────────────────────
+
 const ChatBox = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([
+
+  // TODO: Thay tin nhắn xin chào bằng dữ liệu thật từ database / API nếu cần
+  const [messages] = useState([
     {
       type: "ai",
       text: "Xin chào! Tôi là SmartSell AI 🤖\nTôi có thể giúp bạn tư vấn điện thoại, so sánh sản phẩm và tìm deal tốt nhất!",
     },
   ]);
+
   const [inputValue, setInputValue] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
+  const [isTyping] = useState(false); // TODO: kết nối với trạng thái gọi API thật
+
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
+  // Tự scroll xuống cuối mỗi khi messages thay đổi
   useEffect(() => {
-    scrollToBottom();
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
+  // TODO: Thay hàm này bằng logic gửi tin nhắn thật (gọi API / database)
   const handleSend = (text) => {
     if (!text.trim()) return;
-    const newMessages = [...messages, { type: "user", text }];
-    setMessages(newMessages);
     setInputValue("");
-    setIsTyping(true);
-
-    setTimeout(() => {
-      let aiResponse = {
-        type: "ai",
-        text: "Bạn muốn tìm điện thoại theo mức giá nào? Tôi có thể gợi ý cho bạn những lựa chọn tốt nhất! 😊",
-      };
-
-      const lower = text.toLowerCase();
-
-      if (lower.includes("10") || lower.includes("dưới 10") || lower.includes("giá rẻ")) {
-        aiResponse = {
-          type: "ai",
-          text: "Dưới 10 triệu có khá nhiều lựa chọn tốt! Đây là một số sản phẩm phù hợp:",
-          products: [
-            {
-              name: "iPhone 11 64GB",
-              price: "9.990.000đ",
-              oldPrice: "12.990.000đ",
-              image: "https://via.placeholder.com/100/e2e8f0/64748b?text=📱",
-              badge: "-23%",
-            },
-            {
-              name: "Samsung Galaxy A55",
-              price: "8.490.000đ",
-              oldPrice: "10.990.000đ",
-              image: "https://via.placeholder.com/100/e2e8f0/64748b?text=📱",
-              badge: "-22%",
-            },
-          ],
-        };
-      } else if (lower.includes("game") || lower.includes("chơi game")) {
-        aiResponse = {
-          type: "ai",
-          text: "Máy chơi game cần RAM lớn, màn hình 120Hz và pin khủng! Xem ngay các máy hot:",
-          products: [
-            {
-              name: "Xiaomi 14T Pro Gaming",
-              price: "14.990.000đ",
-              oldPrice: "16.990.000đ",
-              image: "https://via.placeholder.com/100/e2e8f0/64748b?text=🎮",
-              badge: "-12%",
-            },
-            {
-              name: "ASUS ROG Phone 8",
-              price: "22.990.000đ",
-              oldPrice: "26.000.000đ",
-              image: "https://via.placeholder.com/100/e2e8f0/64748b?text=🎮",
-              badge: "-11%",
-            },
-          ],
-        };
-      } else if (lower.includes("ảnh") || lower.includes("camera") || lower.includes("chụp")) {
-        aiResponse = {
-          type: "ai",
-          text: "Đam mê nhiếp ảnh? Đây là những chiếc điện thoại có camera xuất sắc nhất hiện nay:",
-          products: [
-            {
-              name: "iPhone 16 Pro Max",
-              price: "27.490.000đ",
-              oldPrice: "30.990.000đ",
-              image: "https://via.placeholder.com/100/e2e8f0/64748b?text=📸",
-              badge: "-11%",
-            },
-            {
-              name: "Samsung S25 Ultra",
-              price: "26.990.000đ",
-              oldPrice: "29.990.000đ",
-              image: "https://via.placeholder.com/100/e2e8f0/64748b?text=📸",
-              badge: "-10%",
-            },
-          ],
-        };
-      } else if (lower.includes("tư vấn") || lower.includes("điện thoại")) {
-        aiResponse = {
-          type: "ai",
-          text: "Tôi sẵn sàng tư vấn cho bạn! Bạn đang quan tâm đến điện thoại theo tiêu chí nào?\n\n💰 Mức giá\n📸 Camera đẹp\n🎮 Chơi game\n🔋 Pin trâu",
-        };
-      }
-
-      setIsTyping(false);
-      setMessages((prev) => [...prev, aiResponse]);
-    }, 1200);
+    // Phần xử lý gửi tin nhắn sẽ được thêm sau
   };
 
   return (
     <>
-      {/* Floating Toggle Button */}
+      {/* ── Nút mở / đóng chat (floating) ── */}
       <button
         id="ai-chat-toggle-btn"
         onClick={() => setIsOpen(!isOpen)}
@@ -143,7 +65,7 @@ const ChatBox = () => {
         {isOpen ? "✕" : "🤖"}
       </button>
 
-      {/* Pulse ring animation */}
+      {/* ── Vòng ping xung quanh nút (ẩn khi chat đang mở) ── */}
       {!isOpen && (
         <span
           style={{
@@ -160,7 +82,7 @@ const ChatBox = () => {
         />
       )}
 
-      {/* Chat Window */}
+      {/* ── Cửa sổ chat ── */}
       {isOpen && (
         <div
           id="ai-chatbox-window"
@@ -172,7 +94,8 @@ const ChatBox = () => {
             height: "560px",
             background: "#ffffff",
             borderRadius: "24px",
-            boxShadow: "0 24px 64px rgba(0,0,0,0.18), 0 4px 16px rgba(5,150,105,0.12)",
+            boxShadow:
+              "0 24px 64px rgba(0,0,0,0.18), 0 4px 16px rgba(5,150,105,0.12)",
             display: "flex",
             flexDirection: "column",
             zIndex: 999,
@@ -181,7 +104,7 @@ const ChatBox = () => {
             border: "1px solid rgba(5,150,105,0.15)",
           }}
         >
-          {/* Header */}
+          {/* ── Header ── */}
           <div
             style={{
               background: "linear-gradient(135deg, #065f46, #059669)",
@@ -192,6 +115,7 @@ const ChatBox = () => {
               flexShrink: 0,
             }}
           >
+            {/* Avatar AI */}
             <div
               style={{
                 width: "44px",
@@ -207,6 +131,8 @@ const ChatBox = () => {
             >
               🤖
             </div>
+
+            {/* Tên + trạng thái */}
             <div style={{ flex: 1 }}>
               <div
                 style={{
@@ -242,7 +168,10 @@ const ChatBox = () => {
                 </span>
               </div>
             </div>
+
+            {/* Nút đóng */}
             <button
+              id="ai-chat-close-btn"
               onClick={() => setIsOpen(false)}
               style={{
                 background: "rgba(255,255,255,0.15)",
@@ -258,14 +187,18 @@ const ChatBox = () => {
                 justifyContent: "center",
                 transition: "background 0.2s",
               }}
-              onMouseOver={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.25)")}
-              onMouseOut={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.15)")}
+              onMouseOver={(e) =>
+                (e.currentTarget.style.background = "rgba(255,255,255,0.25)")
+              }
+              onMouseOut={(e) =>
+                (e.currentTarget.style.background = "rgba(255,255,255,0.15)")
+              }
             >
               ✕
             </button>
           </div>
 
-          {/* Messages Area */}
+          {/* ── Khu vực tin nhắn ── */}
           <div
             style={{
               flex: 1,
@@ -279,15 +212,18 @@ const ChatBox = () => {
               scrollbarColor: "#d1fae5 transparent",
             }}
           >
+            {/* TODO: Thay messages bằng dữ liệu từ database / API */}
             {messages.map((msg, index) => (
               <div key={index}>
                 <Message msg={msg} />
                 {msg.products &&
-                  msg.products.map((p, i) => <ProductCard key={i} product={p} />)}
+                  msg.products.map((p, i) => (
+                    <ProductCard key={i} product={p} />
+                  ))}
               </div>
             ))}
 
-            {/* Typing Indicator */}
+            {/* Typing indicator — hiện khi AI đang trả lời */}
             {isTyping && (
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <div
@@ -333,13 +269,15 @@ const ChatBox = () => {
                 </div>
               </div>
             )}
+
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick Reply Area */}
+          {/* ── Quick Reply chips ── */}
+          {/* TODO: truyền dữ liệu gợi ý từ API vào QuickReply nếu cần */}
           <QuickReply onSend={handleSend} />
 
-          {/* Input Area */}
+          {/* ── Input gửi tin nhắn ── */}
           <div
             style={{
               padding: "12px 16px",
@@ -412,7 +350,7 @@ const ChatBox = () => {
         </div>
       )}
 
-      {/* CSS Animations */}
+      {/* ── CSS Animations ── */}
       <style>{`
         @keyframes slideUp {
           from { opacity: 0; transform: translateY(30px) scale(0.95); }
