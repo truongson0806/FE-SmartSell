@@ -48,7 +48,7 @@ export const publicRoutes = [
 
 //         ],
 //     },
-   
+
 // ]
 export const storeOwnerRoutes = [
     {
