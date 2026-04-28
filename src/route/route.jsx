@@ -6,7 +6,7 @@ import PageNotFound from "../pages/not-found/PageNotFound";
 import DashboardOwnerPage from "../pages/StoreOwner/Dashboard/DashboardOwner";
 import OrdersOwnerPage from "../pages/StoreOwner/Orders/OrdersOwnerStore";
 import ProductsOwnerPage from "../pages/StoreOwner/Products/ProductsOwner";
-import Customer from "../pages/Customer/Dash/Customer";
+// import Customer from "../pages/Customer/Dash/Customer";
 // Public routes không cần bảo vệ
 export const publicRoutes = [
     {
@@ -14,10 +14,10 @@ export const publicRoutes = [
         element: <MainLayout />,
         children: [{ index: true, element: <HomePage /> }],
     },
-    {
-        path: '/customer',
-        element: <Customer />,
-    },
+    // {
+    //     path: '/customer',
+    //     element: <Customer />,
+    // },
     // {
     //     path: 'login',
     //     element: <Login />,
@@ -61,7 +61,7 @@ export const storeOwnerRoutes = [
         { path: 'orders', element: <OrdersOwnerPage /> },
         { path: '*', element: <PageNotFound /> },
         { path: 'not-allowed', element: <Forbiden /> },
-        { path: 'customers', element: <Customer /> },
+        // { path: 'customers', element: <Customer /> },
       ],
     },
   ]

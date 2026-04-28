@@ -1,6 +1,12 @@
-import { useState, useEffect } from "react";
-import { Search, Visibility, FilterList } from "@mui/icons-material";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "react-toastify";
 import axiosInstance from "../../../network/httpRequest";
+
+import CancelOrderModal from "../../../components/orders/CancelOrderModal";
+import OrderStats from "../../../components/orders/OrderStats";
+import OrderFilter from "../../../components/orders/OrderFilter";
+import OrdersTable from "../../../components/orders/OrdersTable";
+import OrderDetailModal from "../../../components/orders/OrderDetailModal";
 
 export default function OrdersOwnerPage() {
   const [orders, setOrders] = useState([]);
@@ -8,40 +14,12 @@ export default function OrdersOwnerPage() {
   const [statusFilter, setStatusFilter] = useState("Tất cả");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [showFilter, setShowFilter] = useState(false);
+  const [cancelOrder, setCancelOrder] = useState(null);
 
-  const userId = localStorage.getItem("userId");
+  const [loading, setLoading] = useState(false);
 
-  // 🚀 CALL API
-  const fetchOrders = async () => {
-    try {
-      const res = await axiosInstance.get(
-        `/orders/getOrdersByUserId/${userId}`
-      );
-
-      // map data BE → FE
-      const mapped = res.data.data.map((o) => ({
-        id: o._id,
-        customer: o.userId?.email || "Khách",
-        total: o.totalAmount,
-        status: mapStatus(o.orderStatus),
-        date: o.createdAt?.slice(0, 10),
-        items: o.items.map((i) => i.sku),
-        raw: o, // giữ data gốc
-      }));
-
-      setOrders(mapped);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  // 🧠 map status BE → UI
   const mapStatus = (status) => {
     switch (status) {
       case "PROCESSING":
@@ -57,184 +35,187 @@ export default function OrdersOwnerPage() {
     }
   };
 
-  // 🔄 update status
-  const handleUpdateStatus = async (orderId, status) => {
+  const fetchOrders = async () => {
     try {
+      setLoading(true);
+
+      const res = await axiosInstance.get(
+        "/orders/getAllOrders?page=1&limit=100"
+      );
+
+      const list = res.data?.data || [];
+
+      const mapped = list.map((o) => ({
+        id: o._id,
+        customer: o.userId?.email || "Khách",
+        phone: o.phoneNumber || "Chưa có",
+        total: o.totalAmount || 0,
+        status: mapStatus(o.orderStatus),
+        statusBE: o.orderStatus,
+        paymentMethod: o.paymentMethod,
+        paymentStatus: o.paymentStatus,
+        date: o.createdAt?.slice(0, 10),
+        items: o.items || [],
+        address: o.shippingAddress,
+        note: o.note,
+        raw: o,
+      }));
+
+      setOrders(mapped);
+    } catch (err) {
+      console.error(err);
+      toast.error("Không thể tải danh sách đơn hàng");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  const handleUpdateStatus = async (orderId, orderStatus) => {
+    const oldOrders = orders;
+
+    const mapStatus = (status) => {
+      switch (status) {
+        case "PROCESSING":
+          return "Đã thanh toán";
+        case "SHIPPING":
+          return "Đang giao";
+        case "DELIVERED":
+          return "Hoàn thành";
+        case "CANCELLED":
+          return "Đã hủy";
+        default:
+          return status;
+      }
+    };
+
+    try {
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId
+            ? {
+              ...order,
+              statusBE: orderStatus,
+              status: mapStatus(orderStatus),
+            }
+            : order
+        )
+      );
+
       await axiosInstance.put(`/orders/updateOrderStatus/${orderId}`, {
-        orderStatus: status,
+        orderStatus,
       });
 
+      toast.success("Cập nhật trạng thái thành công");
+    } catch (err) {
+      console.error(err);
+      setOrders(oldOrders);
+      toast.error("Cập nhật trạng thái thất bại");
+    }
+  };
+
+  const handleConfirmCancel = async () => {
+    if (!cancelOrder) return;
+
+    try {
+      await axiosInstance.put(`/orders/cancelOrder/${cancelOrder.id}`);
+      toast.success("Đã huỷ đơn hàng");
+      setCancelOrder(null);
       fetchOrders();
     } catch (err) {
       console.error(err);
+      toast.error("Huỷ đơn thất bại");
     }
   };
+
+  const filteredOrders = useMemo(() => {
+    const keyword = search.toLowerCase();
+
+    return orders.filter((o) => {
+      return (
+        (o.customer.toLowerCase().includes(keyword) ||
+          o.id.toLowerCase().includes(keyword) ||
+          o.phone.toLowerCase().includes(keyword)) &&
+        (statusFilter === "Tất cả" || o.status === statusFilter) &&
+        (!fromDate || o.date >= fromDate) &&
+        (!toDate || o.date <= toDate)
+      );
+    });
+  }, [orders, search, statusFilter, fromDate, toDate]);
 
   const totalOrders = orders.length;
-  const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
 
-  const filteredOrders = orders.filter((o) => {
-    return (
-      (o.customer.toLowerCase().includes(search.toLowerCase()) ||
-        o.id.toLowerCase().includes(search.toLowerCase())) &&
-      (statusFilter === "Tất cả" || o.status === statusFilter) &&
-      (!fromDate || o.date >= fromDate) &&
-      (!toDate || o.date <= toDate)
-    );
-  });
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Đã thanh toán":
-        return "bg-blue-100 text-blue-600";
-      case "Đang giao":
-        return "bg-orange-100 text-orange-600";
-      case "Hoàn thành":
-        return "bg-green-100 text-green-600";
-      case "Đã hủy":
-        return "bg-red-100 text-red-600";
-      default:
-        return "bg-gray-100";
-    }
-  };
+  const totalRevenue = orders
+    .filter((o) => o.statusBE !== "CANCELLED")
+    .reduce((sum, o) => sum + o.total, 0);
 
   const resetFilter = () => {
+    setSearch("");
     setStatusFilter("Tất cả");
     setFromDate("");
     setToDate("");
   };
 
   return (
-    <div className="space-y-6">
-      {/* HEADER */}
-      <div className="bg-linear-to-r from-indigo-500 to-blue-600 text-white p-6 rounded-2xl shadow">
-        <h1 className="text-2xl font-bold">Quản lý đơn hàng</h1>
-      </div>
-
-      {/* STATS */}
-      <div className="grid grid-cols-2 gap-6">
-        <div className="bg-white p-5 rounded-2xl shadow">
-          <p>Tổng đơn</p>
-          <p className="text-2xl font-bold">{totalOrders}</p>
-        </div>
-
-        <div className="bg-white p-5 rounded-2xl shadow">
-          <p>Doanh thu</p>
-          <p className="text-2xl font-bold text-blue-600">
-            {totalRevenue.toLocaleString()}đ
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium text-blue-600">Store Owner</p>
+          <h1 className="mt-1 text-3xl font-bold text-slate-900">
+            Quản lý đơn hàng
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Theo dõi đơn hàng, doanh thu và trạng thái vận chuyển.
           </p>
-        </div>
-      </div>
-
-      {/* SEARCH */}
-      <div className="bg-white p-4 rounded-2xl shadow flex gap-4 items-center">
-        <div className="flex items-center border rounded-lg px-3 py-2 w-full">
-          <Search />
-          <input
-            placeholder="Tìm kiếm..."
-            className="outline-none ml-2 w-full"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
         </div>
 
         <button
-          onClick={() => setShowFilter(!showFilter)}
-          className="bg-gray-100 px-4 py-2 rounded-lg"
+          onClick={fetchOrders}
+          className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow hover:bg-slate-800"
         >
-          <FilterList />
+          Làm mới dữ liệu
         </button>
       </div>
 
-      {/* TABLE */}
-      <div className="bg-white rounded-2xl shadow overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="p-4">Mã đơn</th>
-              <th>Khách</th>
-              <th>Ngày</th>
-              <th>Tổng</th>
-              <th>Trạng thái</th>
-              <th>Hành động</th>
-              <th>Chi tiết</th>
-            </tr>
-          </thead>
+      <OrderStats
+        totalOrders={totalOrders}
+        totalRevenue={totalRevenue}
+        processing={orders.filter((o) => o.statusBE === "PROCESSING").length}
+        shipping={orders.filter((o) => o.statusBE === "SHIPPING").length}
+      />
 
-          <tbody>
-            {filteredOrders.map((o) => (
-              <tr key={o.id} className="border-t">
-                <td className="p-4">{o.id}</td>
-                <td>{o.customer}</td>
-                <td>{o.date}</td>
-                <td>{o.total.toLocaleString()}đ</td>
+      <OrderFilter
+        search={search}
+        setSearch={setSearch}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        fromDate={fromDate}
+        setFromDate={setFromDate}
+        toDate={toDate}
+        setToDate={setToDate}
+        resetFilter={resetFilter}
+      />
 
-                <td>
-                  <span className={`px-2 py-1 rounded ${getStatusColor(o.status)}`}>
-                    {o.status}
-                  </span>
-                </td>
+      <OrdersTable
+        orders={filteredOrders}
+        loading={loading}
+        onView={setSelectedOrder}
+        onUpdateStatus={handleUpdateStatus}
+      />
 
-                {/* 🔥 ACTION */}
-                <td className="space-x-2">
-                  <button
-                    onClick={() => handleUpdateStatus(o.id, "SHIPPING")}
-                    className="text-orange-500"
-                  >
-                    🚚
-                  </button>
+      <OrderDetailModal
+        order={selectedOrder}
+        onClose={() => setSelectedOrder(null)}
+      />
 
-                  <button
-                    onClick={() => handleUpdateStatus(o.id, "DELIVERED")}
-                    className="text-green-600"
-                  >
-                    ✅
-                  </button>
-
-                  <button
-                    onClick={() => handleUpdateStatus(o.id, "CANCELLED")}
-                    className="text-red-500"
-                  >
-                    ❌
-                  </button>
-                </td>
-
-                <td>
-                  <button onClick={() => setSelectedOrder(o)}>
-                    <Visibility />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* MODAL */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-black/30 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-xl w-100">
-            <h2 className="font-bold">Chi tiết đơn</h2>
-
-            <p>Mã: {selectedOrder.id}</p>
-            <p>Khách: {selectedOrder.customer}</p>
-            <p>Tổng: {selectedOrder.total.toLocaleString()}đ</p>
-
-            <ul className="list-disc ml-5">
-              {selectedOrder.items.map((i, idx) => (
-                <li key={idx}>{i}</li>
-              ))}
-            </ul>
-
-            <button
-              onClick={() => setSelectedOrder(null)}
-              className="mt-3 bg-blue-600 text-white px-4 py-2 rounded"
-            >
-              Đóng
-            </button>
-          </div>
-        </div>
-      )}
+      <CancelOrderModal
+        order={cancelOrder}
+        onClose={() => setCancelOrder(null)}
+        onConfirm={handleConfirmCancel}
+      />
     </div>
   );
 }
