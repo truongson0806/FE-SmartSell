@@ -89,8 +89,41 @@ export const filterByRank = async (rank) => {
     throw error;
   }
 };
+// Đăng ký
+export const CustomerRegister = async (data) => {
+  try {
+    const response = await httpRequest.post("/auth/register", data);
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi đăng ký:", error);
+    throw error;
+  }
+};
+// Đăng nhập
+export const CustomerLogin = async (data) => {
+  try {
+    const response = await httpRequest.post("/auth/login", data);
+
+    // lưu token + user
+    if (response.data?.token) {
+      localStorage.setItem("token", response.data.token);
+    }
+
+    if (response.data?.user) {
+      localStorage.setItem("currentUser", JSON.stringify(response.data.user));
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Lỗi đăng nhập:", error);
+    throw error;
+  }
+};
+
 
 export default {
+  CustomerRegister,
+  CustomerLogin,
   getCustomers,
   getCustomerStats,
   createCustomer,
