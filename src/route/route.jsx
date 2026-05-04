@@ -15,10 +15,6 @@ export const publicRoutes = [
         element: <MainLayout />,
         children: [{ index: true, element: <HomePage /> }],
     },
-    //{
-   //     path: '/customer',
-     //   element: <Customer />,
-   // },
     // {
     //     path: 'login',
     //     element: <Login />,
@@ -63,6 +59,7 @@ export const storeOwnerRoutes = [
         { path: '*', element: <PageNotFound /> },
         { path: 'not-allowed', element: <Forbiden /> },
        // { path: 'customers', element: <Customer /> },
+       //{ path: 'settings', element: <Settings /> }
       ],
     },
   ]
