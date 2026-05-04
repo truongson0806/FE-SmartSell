@@ -1,10 +1,10 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import { publicRoutes, storeOwnerRoutes } from './route'
+import { publicRoutes, storeOwnerRoutes, adminRoutes } from './route'
 
 const routes = [
     ...publicRoutes,
-    ...storeOwnerRoutes
-  
+    ...storeOwnerRoutes,
+    ...adminRoutes
 ]
 
 const router = createBrowserRouter(routes)
