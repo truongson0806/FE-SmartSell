@@ -15,13 +15,27 @@ import OrdersAdmin from "../pages/Admin/OrdersAdmin";
 import Analytics from "../pages/Admin/Analytics";
 import AdminSettings from "../pages/Admin/AdminSettings";
 import Customer from "../components/Customer";
-
+import CustomerLogin from "../components/CustomerLogin";
+import CustomerRegister from "../components/CustomerRegister";
+import CartPage from "../pages/Cart/Cart";
 // Public routes không cần bảo vệ
 export const publicRoutes = [
     {
         path: '/',
         element: <MainLayout />,
         children: [{ index: true, element: <HomePage /> }],
+    },
+    {
+        path: 'login',
+        element: <CustomerLogin />,
+    },
+    {
+        path: 'register',
+        element: <CustomerRegister />,
+    },
+    {
+        path: 'cart',
+        element: <CartPage />,
     },
     {
         path: 'not-allowed',
@@ -32,7 +46,6 @@ export const publicRoutes = [
         element: <PageNotFound />,
     },
 ]
-
 // Store Owner routes
 export const storeOwnerRoutes = [
     {
@@ -68,7 +81,7 @@ export const adminRoutes = [
       { path: "dashboard", element: <AdminDashboard /> },
       { path: "users", element: <UserManagement /> },
       { path: "stores", element: <StoreManagement /> },
-      { path: "orders", element: <OrdSersAdmin /> },
+      { path: "orders", element: <OrdersAdmin /> },
       { path: "analytics", element: <Analytics /> },
       { path: "settings", element: <AdminSettings /> },
       { path: "*", element: <PageNotFound /> },

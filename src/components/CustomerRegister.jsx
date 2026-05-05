@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 export default function CustomerRegister() {
   const [form, setForm] = useState({
@@ -25,14 +26,14 @@ export default function CustomerRegister() {
     // check trùng email
     const exists = users.find(u => u.email === form.email);
     if (exists) {
-      alert("Email đã tồn tại!");
+      toast.error("Email đã tồn tại!");
       return;
     }
 
     users.push(form);
     localStorage.setItem("users", JSON.stringify(users));
 
-    alert("Đăng ký thành công!");
+    toast.success("Đăng ký thành công!");
     navigate("/login");
   };
 
@@ -46,6 +47,9 @@ export default function CustomerRegister() {
           <input type="password" placeholder="Mật khẩu" className="w-full border rounded-lg p-2 mb-3" onChange={handleChange}/>
           <button className="w-full bg-emerald-600 text-white py-2 rounded-lg">Đăng ký</button>
         </form>
+        <div className="mt-4 text-center text-sm">
+          Đã có tài khoản? <Link to="/login" className="text-emerald-600 font-bold hover:underline">Đăng nhập</Link>
+        </div>
       </div>
     </div>
   );

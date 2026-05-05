@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 export default function CustomerLogin() {
   const [form, setForm] = useState({
@@ -26,14 +27,14 @@ export default function CustomerLogin() {
     );
 
     if (!user) {
-      alert("Sai tài khoản hoặc mật khẩu!");
+      toast.error("Sai tài khoản hoặc mật khẩu!");
       return;
     }
 
     // lưu session
     localStorage.setItem("currentUser", JSON.stringify(user));
 
-    alert("Đăng nhập thành công!");
+    toast.success("Đăng nhập thành công!");
     navigate("/");
   };
 
@@ -46,6 +47,9 @@ export default function CustomerLogin() {
           <input type="password" placeholder="Mật khẩu" className="w-full border rounded-lg p-2 mb-3" onChange={handleChange}/>
           <button className="w-full bg-emerald-600 text-white py-2 rounded-lg">Đăng nhập</button>
         </form>
+        <div className="mt-4 text-center text-sm">
+          Chưa có tài khoản? <Link to="/register" className="text-emerald-600 font-bold hover:underline">Đăng ký ngay</Link>
+        </div>
       </div>
     </div>
   );

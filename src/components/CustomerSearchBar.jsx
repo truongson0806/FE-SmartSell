@@ -39,7 +39,6 @@ export default function CustomerSearchBar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  return (
     <div className="search-bar-container" ref={filterRef}>
       {/* SEARCH */}
       <div className="search-bar">
@@ -61,72 +60,74 @@ export default function CustomerSearchBar({
       </div>
 
       {/* FILTER */}
-      {showFilter && (
-        <div className="filter-dropdown">
-          <div className="filter-content">
-            <h3 className="filter-title">Bộ lọc khách hàng</h3>
+      <div className={`filter-dropdown ${showFilter ? 'visible' : 'hidden'}`}>
+        <div className="filter-content">
+          <h3 className="filter-title">Bộ lọc khách hàng</h3>
 
-            {/* Rank */}
+          {/* Rank */}
+          <div className="filter-group">
+            <label className="filter-label">Xếp hạng</label>
+            <select
+              className="filter-select"
+              value={filterRank}
+              onChange={(e) => onFilterRankChange(e.target.value)}
+            >
+              <option value="all">Tất cả</option>
+              <option value="diamond">Kim cương</option>
+              <option value="gold">Vàng</option>
+              <option value="silver">Bạc</option>
+              <option value="bronze">Đồng</option>
+            </select>
+          </div>
+
+          {/* Status */}
+          <div className="filter-group">
+            <label className="filter-label">Trạng thái</label>
+            <select
+              className="filter-select"
+              value={filterStatus}
+              onChange={(e) => onFilterStatusChange(e.target.value)}
+            >
+              <option value="all">Tất cả</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="blocked">Blocked</option>
+            </select>
+          </div>
+
+          {/* Date */}
+          <div className="date-range">
             <div className="filter-group">
-              <label>Xếp hạng</label>
-              <select
-                value={filterRank}
-                onChange={(e) => onFilterRankChange(e.target.value)}
-              >
-                <option value="all">Tất cả</option>
-                <option value="diamond">Kim cương</option>
-                <option value="gold">Vàng</option>
-                <option value="silver">Bạc</option>
-                <option value="bronze">Đồng</option>
-              </select>
+              <label className="filter-label">Từ ngày</label>
+              <input
+                type="date"
+                className="filter-input"
+                value={fromDate}
+                onChange={(e) => onFromDateChange(e.target.value)}
+              />
             </div>
 
-            {/* Status */}
             <div className="filter-group">
-              <label>Trạng thái</label>
-              <select
-                value={filterStatus}
-                onChange={(e) => onFilterStatusChange(e.target.value)}
-              >
-                <option value="all">Tất cả</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="blocked">Blocked</option>
-              </select>
-            </div>
-
-            {/* Date */}
-            <div className="date-range">
-              <div className="filter-group">
-                <label>Từ ngày</label>
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => onFromDateChange(e.target.value)}
-                />
-              </div>
-
-              <div className="filter-group">
-                <label>Đến ngày</label>
-                <input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => onToDateChange(e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* ACTION */}
-            <div className="filter-actions">
-              <button onClick={onResetFilter}>Reset</button>
-
-              <button onClick={() => setShowFilter(false)}>
-                Áp dụng
-              </button>
+              <label className="filter-label">Đến ngày</label>
+              <input
+                type="date"
+                className="filter-input"
+                value={toDate}
+                onChange={(e) => onToDateChange(e.target.value)}
+              />
             </div>
           </div>
+
+          {/* ACTION */}
+          <div className="filter-actions">
+            <button onClick={onResetFilter} className="reset-button">Reset</button>
+
+            <button onClick={() => setShowFilter(false)} className="apply-button">
+              Áp dụng
+            </button>
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }

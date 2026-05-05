@@ -1,3 +1,6 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 export default function HomePage() {
     const categories = [
       'Điện thoại',
@@ -98,6 +101,29 @@ export default function HomePage() {
       'Điện máy'
     ];
   
+    const [currentUser, setCurrentUser] = useState(null);
+    const [cartCount, setCartCount] = useState(0);
+
+    useEffect(() => {
+      const user = JSON.parse(localStorage.getItem('currentUser'));
+      if (user) setCurrentUser(user);
+
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+      setCartCount(cart.length);
+    }, []);
+
+    const handleLogout = () => {
+      localStorage.removeItem('currentUser');
+      setCurrentUser(null);
+    };
+
+    const handleAddToCart = (product) => {
+      const cart = JSON.parse(localStorage.getItem('cart')) || [];
+      cart.push(product);
+      localStorage.setItem('cart', JSON.stringify(cart));
+      setCartCount(cart.length);
+      toast.success(`Đã thêm ${product.name} vào giỏ hàng!`);
+    };
     return (
       <div className="min-h-screen bg-slate-100 text-slate-800">
         <header className="sticky top-0 z-50 border-b border-emerald-700 bg-emerald-600 text-white shadow-md">
@@ -116,8 +142,17 @@ export default function HomePage() {
             </div>
             <div className="hidden items-center gap-5 text-sm lg:flex">
               <span>📍 Cửa hàng gần bạn</span>
-              <span>🛒 Giỏ hàng</span>
-              <span>👤 Đăng nhập</span>
+              <Link to="/cart" className="cursor-pointer hover:text-emerald-200">
+                🛒 Giỏ hàng ({cartCount})
+              </Link>
+              {currentUser ? (
+                <div className="flex items-center gap-3">
+                  <span className="font-bold">👤 {currentUser.name || currentUser.email}</span>
+                  <button onClick={handleLogout} className="text-red-200 font-bold hover:underline">Đăng xuất</button>
+                </div>
+              ) : (
+                <Link to="/login" className="hover:text-emerald-200">👤 Đăng nhập</Link>
+              )}
             </div>
           </div>
         </header>
@@ -215,7 +250,9 @@ export default function HomePage() {
                         <span className="text-lg font-black text-rose-600">{item.price}</span>
                         <span className="text-xs text-slate-400 line-through">{item.oldPrice}</span>
                       </div>
-                      <button className="mt-4 w-full rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">
+                      <button 
+                        onClick={() => handleAddToCart(item)}
+                        className="mt-4 w-full rounded-2xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700">
                         Thêm vào giỏ
                       </button>
                     </div>
@@ -266,8 +303,10 @@ export default function HomePage() {
                         <span>⭐ 4.8</span>
                         <span>Trả góp 0%</span>
                       </div>
-                      <button className="mt-4 w-full rounded-2xl border border-emerald-600 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-600 hover:text-white">
-                        Xem chi tiết
+                      <button 
+                        onClick={() => handleAddToCart(product)}
+                        className="mt-4 w-full rounded-2xl border border-emerald-600 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-600 hover:text-white">
+                        Thêm vào giỏ
                       </button>
                     </article>
                   ))}
