@@ -18,7 +18,6 @@ export default function CustomerSearchBar({
   const [localSearch, setLocalSearch] = useState(search);
   const filterRef = useRef();
 
-  // 🔥 debounce search (tránh gọi API liên tục)
   useEffect(() => {
     const delay = setTimeout(() => {
       onSearchChange(localSearch);
@@ -27,7 +26,6 @@ export default function CustomerSearchBar({
     return () => clearTimeout(delay);
   }, [localSearch]);
 
-  // 🔥 đóng filter khi click ngoài
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (filterRef.current && !filterRef.current.contains(e.target)) {
@@ -38,7 +36,7 @@ export default function CustomerSearchBar({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
+  return (
     <div className="search-bar-container" ref={filterRef}>
       {/* SEARCH */}
       <div className="search-bar">
